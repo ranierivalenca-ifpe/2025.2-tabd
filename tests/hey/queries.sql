@@ -1,0 +1,2 @@
+SELECT nome, count(*) as count FROM clientes GROUP BY nome HAVING count(*) > 1 ORDER BY count DESC;
+SELECT * FROM (SELECT nome, count(*) as count FROM clientes GROUP BY nome) as subquery WHERE count > 1 ORDER BY count DESC;
