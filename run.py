@@ -3,15 +3,16 @@ import os
 import subprocess
 
 TESTS_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tests")
-SCAFFOLD_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "scaffold-template")
-
-cmds = (
-    "execute",
-    "scaffold",
+SCAFFOLD_PATH = os.path.join(
+    os.path.abspath(os.path.dirname(__file__)), "scaffold-template"
 )
 
+cmds = ("execute", "scaffold", "seed")
+
+
 def execute(path):
-    subprocess.run('./run.sh {}'.format(path), shell=True, check=True)
+    subprocess.run("./run.sh {}".format(path), shell=True, check=True)
+
 
 def scaffold():
     directory = survey.routines.input("Enter project directory name:")
@@ -28,8 +29,7 @@ def scaffold():
         scaffold()  # Retry if directory exists
 
 
-def exec():
-    # list tests path directories sorted by creation time
+def select_project_directory():
     directories = os.listdir(TESTS_PATH)
     print("Available project directories:")
     options = ()
@@ -49,9 +49,26 @@ def exec():
     )
     if dir_index is None:
         return
-    directory = os.path.join(TESTS_PATH, options[dir_index])
+    return options[dir_index], options
+
+
+def exec():
+    dir = select_project_directory()
+    if dir is None:
+        return
+    (selected_dir, _) = dir
+    directory = os.path.join(TESTS_PATH, selected_dir)
     print(f"Executing project in directory: {directory}")
     execute(directory)
+
+def seed():
+    directory = select_project_directory()
+    if directory is None:
+        return
+    (directory, _) = directory
+    path = os.path.join(TESTS_PATH, directory)
+    print(f"Seeding database for project in directory: {directory}")
+    subprocess.run("python3 seeder.py", shell=True, check=True, cwd=path)
 
 
 def run(cmd):
@@ -59,6 +76,8 @@ def run(cmd):
         scaffold()
     elif cmd == "execute":
         exec()
+    elif cmd == "seed":
+        seed()
 
 
 if __name__ == "__main__":
