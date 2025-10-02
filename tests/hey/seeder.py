@@ -111,10 +111,10 @@ DATA = {
     },
 }
 ROWS = {
-    'clientes': 0000,
-    'restaurantes': 000,
-    'produtos': 0000,
-    'pedidos': 10000,
+    'clientes': 10000,
+    'restaurantes': 1000,
+    'produtos': 20000,
+    'pedidos': 50000,
     'itens_pedido': 30000,
 }
 
