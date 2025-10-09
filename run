@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+
+import survey
+
+from lib import Target, Logger, Project, Input, Actions
+
+
+EXIT_CODE = -1001
+
+
+def exit_menu():
+    return EXIT_CODE
+
+
+project_cmds = lambda project_dir: [
+    Target("Start server", lambda: Project(project_dir).start_server()),
+    Target(
+        "Shell into server",
+        lambda: Project(project_dir).shell_into_server(),
+    ),
+    Target("Stop server", lambda: Project(project_dir).stop_server()),
+    Target("Connect to server", lambda: Project(project_dir).connect_db()),
+    Target("Seed database", lambda: Project(project_dir).seed_db()),
+    Target("Exit project", exit_menu),
+]
+
+
+def project_screen(project_dir):
+    Logger.text("--------------------------------")
+    Logger.text("You are on the project: {}".format(project_dir))
+    cmds = project_cmds(project_dir)
+    try:
+        while True:
+            index = Input.select(
+                "Choose an action:",
+                options=[str(c) for c in cmds],
+            )
+            if index is not None:
+                try:
+                    if cmds[index]() == EXIT_CODE:
+                        break
+                except Exception as e:
+                    Logger.fail("Error occurred: {}".format(e))
+    except survey._widgets.Escape:
+        Logger.text()
+    finally:
+        Project(project_dir).stop_server()
+        Logger.text()
+        Logger.info("Exiting project screen.")
+        Logger.text("--------------------------------")
+        Logger.text()
+
+
+cmds = [
+    Target("Open project", project_screen, pre=Actions.select_project_directory),
+    Target("Scaffold new project", Actions.scaffold),
+    Target("Exit", exit_menu),
+]
+
+if __name__ == "__main__":
+    try:
+        while True:
+            index = Input.select("Select a command:", options=[str(c) for c in cmds])
+            if index is not None:
+                if cmds[index]() == EXIT_CODE:
+                    break
+    except survey._widgets.Escape:
+        Logger.text("\n")
+        Logger.info("Operation cancelled by user.")
