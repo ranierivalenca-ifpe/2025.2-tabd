@@ -7,6 +7,7 @@ from lib.logger import Logger
 
 import os
 import time
+import threading
 
 
 class Project:
@@ -30,8 +31,31 @@ class Project:
             == 0
         )
 
-    def start_server(self):
+    def server_thread(self, output):
         directory = os.path.join(PROJECTS_PATH, self.project_dir)
+        output.append(
+            SubCalls.docker_run(
+                "postgres",
+                flags=(
+                    "--rm",
+                    "--name {}".format(server_name(self.project_dir)),
+                    "--network {}".format(net_name(self.project_dir)),
+                    "-p {}:5432".format(EXPOSED_PORT),
+                    "-v {}/sql:/docker-entrypoint-initdb.d/:ro".format(directory),
+                ),
+                env={
+                    "PGDATA": "/var/lib/postgresql/data/pgdata",
+                    "POSTGRES_USER": DB_USER,
+                    "POSTGRES_PASSWORD": DB_PASS,
+                },
+                capture_output=True,
+                capture_code=False,
+                # check=True,
+            )
+        )
+
+    def start_server(self):
+
         # Create project network
         if (
             SubCalls.docker(
@@ -42,38 +66,17 @@ class Project:
         ):
             Logger.done("Network {} created.".format(net_name(self.project_dir)))
 
-        (output, result) = SubCalls.docker_run(
-            "postgres",
-            flags=(
-                "--rm",
-                "--name {}".format(server_name(self.project_dir)),
-                "--network {}".format(net_name(self.project_dir)),
-                "-p {}:5432".format(EXPOSED_PORT),
-                "-d",
-                "-v {}/sql:/docker-entrypoint-initdb.d/:ro".format(directory),
-            ),
-            env={
-                "PGDATA": "/var/lib/postgresql/data/pgdata",
-                "POSTGRES_USER": DB_USER,
-                "POSTGRES_PASSWORD": DB_PASS,
-            },
-            capture_code=True,
-            capture_output=True,
-        )
-        if result == 0:
-            Logger.done("PostgreSQL server started.")
-            Logger.text(output)
-        else:
-            Logger.fail("Failed to start PostgreSQL server.")
-            Logger.text(output)
-            return
+        output = []
+        thread = threading.Thread(target=self.server_thread, args=(output,))
+        thread.start()
 
-        with Input.spin(
-            "Waiting for PostgreSQL server to be ready...",
-            "PostgreSQL server is ready.",
-        ):
-            while not self.is_server_up():
-                time.sleep(1)
+        Logger.info("Waiting for PostgreSQL server to be ready...")
+        while not self.is_server_up() and thread.is_alive():
+            time.sleep(1)
+        if not thread.is_alive():
+            Logger.fail("Failed to start PostgreSQL server.")
+            Logger.text("".join(output))
+            return
         Logger.done("PostgreSQL server is running.")
 
     def stop_server(self):
