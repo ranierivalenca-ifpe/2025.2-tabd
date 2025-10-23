@@ -60,7 +60,8 @@ class Seeder:
             #         if (i + 1) % 1000 == 0:
             #             print(f"{i+1} rows inserted into {table}...")
 
-            for table, fields in schema.items():
+            for table in rows.keys():
+                fields = schema.get(table, {})
                 if table not in rows:
                     continue
                 num_rows = rows[table]
