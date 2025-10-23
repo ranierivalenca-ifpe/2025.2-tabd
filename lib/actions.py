@@ -16,7 +16,7 @@ class Actions:
         try:
             path = os.path.join(PROJECTS_PATH, directory)
             os.makedirs(path, exist_ok=False)
-            SubCalls.run("cp -R {}/ {}".format(SCAFFOLD_PATH, path), check=True)
+            SubCalls.run("cp -R {}/* {}".format(SCAFFOLD_PATH, path), check=True)
             Logger.done(f"Directory '{directory}' created successfully.")
         except FileExistsError:
             Logger.fail(f"Directory '{directory}' already exists.")
