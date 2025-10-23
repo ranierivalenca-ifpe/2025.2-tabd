@@ -7,19 +7,25 @@
 # sample data.
 # ----------------------------------------------------------------------------------------------
 
+# DO NOT CHANGE THE IMPORTS BELOW
 import os
 import site
 
 site.addsitedir(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from lib import fake, Seeder
+# DO NOT CHANGE THE IMPORTS ABOVE
 
+# ----------------------------------------------------------------------------------------------
 # CHANGE THE PARAMETERS AND VARIABLES BELOW TO MATCH YOUR DATABASE SCHEMA
+# ----------------------------------------------------------------------------------------------
 
 db_host = "localhost"
 db_port = 5432
 db_name = "tabd"
 
+# ----------------------------------------------------------------------------------------------
 # Seeder must be initialized with the correct DB connection info before you can use it on seeding
+# ----------------------------------------------------------------------------------------------
 seeder = Seeder(db_host, db_port, db_name)
 
 schema = {
