@@ -3,6 +3,7 @@
 import survey
 
 from lib import Target, Logger, Project, Input, Actions
+from lib._sub_calls import SubCalls
 
 
 EXIT_CODE = -1001
@@ -59,6 +60,10 @@ cmds = [
 
 if __name__ == "__main__":
     try:
+        if SubCalls.run("which docker", capture_code=True) != 0:
+            Logger.fail("Docker is not installed or not found in PATH.")
+            exit(1)
+        SubCalls.run("clear", check=True)
         while True:
             index = Input.select("Select a command:", options=[str(c) for c in cmds])
             if index is not None:
