@@ -41,7 +41,8 @@ class Project:
             == 0
         ):
             Logger.done("Network {} created.".format(net_name(self.project_dir)))
-        SubCalls.docker_run(
+
+        (output, result) = SubCalls.docker_run(
             "postgres",
             flags=(
                 "--rm",
@@ -56,7 +57,16 @@ class Project:
                 "POSTGRES_USER": DB_USER,
                 "POSTGRES_PASSWORD": DB_PASS,
             },
+            capture_code=True,
+            capture_output=True,
         )
+        if result == 0:
+            Logger.done("PostgreSQL server started.")
+            Logger.text(output)
+        else:
+            Logger.fail("Failed to start PostgreSQL server.")
+            Logger.text(output)
+            return
 
         with Input.spin(
             "Waiting for PostgreSQL server to be ready...",
